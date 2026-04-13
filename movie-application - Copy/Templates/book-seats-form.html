@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Book Seats</title>
+    <style>
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: url("https://cdn.pixabay.com/photo/2017/01/12/17/30/warm-and-cozy-1975215_1280.jpg");
+            background-attachment: fixed;
+            background-position: relative;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .login-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 420px;
+            padding: 50px;
+            transform: translate(-50%, -50%);
+            background: rgba(16, 15, 15, 0.7);
+            box-sizing: border-box;
+            box-shadow: 0 15px 25px rgba(80, 80, 80, 0.5);
+            border-radius: 10px;
+        }
+
+        .login-box h2 {
+            margin: 0 0 20px;
+            color: #f3eff2;
+            text-align: center;
+        }
+
+        .login-box .user-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .login-box .user-box input,
+        .login-box .user-box select {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 20px;
+            border: none;
+            border-bottom: 1px solid #fff;
+            outline: none;
+            background: transparent;
+        }
+
+        .login-box .user-box select option {
+            color: #000;
+        }
+
+        .login-box .user-box label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #fff;
+            pointer-events: none;
+            transition: 0.5s;
+        }
+
+        .login-box .user-box input:focus~label,
+        .login-box .user-box input:valid~label {
+            top: -20px;
+            left: 0;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .login-box-button {
+            position: relative;
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            font-size: 16px;
+            text-transform: uppercase;
+            transition: 0.5s;
+            margin-top: 20px;
+            letter-spacing: 4px;
+            background: #8b0000;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .login-box-button:hover {
+            background: #fff;
+            color: #8b0000;
+        }
+
+        .category-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .cat-btn {
+            padding: 6px 12px;
+            background: #8b0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .cat-btn:hover {
+            background: #a00;
+        }
+
+        .movie-category-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .movie-details-box {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        li:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 15px;
+            color: #ccc;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-box">
+        <h2>Book Your Seats</h2>
+
+        <div class="category-buttons">
+            <button class="cat-btn" onclick="getMovies('Action')">Action</button>
+            <button class="cat-btn" onclick="getMovies('Comedy')">Comedy</button>
+            <button class="cat-btn" onclick="getMovies('Drama')">Drama</button>
+        </div>
+
+        <div class="movie-category-box" id="movie-category1"></div>
+        <div class="movie-details-box" id="movie-details1"></div>
+
+        <form id="booking-form" action="/book-seats" method="POST">
+            <div class="user-box">
+                <select id="movie-name-select" name="Movie name" required>
+                    <option value="" disabled selected>Select a movie</option>
+                </select>
+            </div>
+            <div class="user-box">
+                <input type="number" id="seats" name="seats-to-book" min="1" required />
+                <label>Number of Seats</label>
+            </div>
+            <button type="submit" class="login-box-button">Submit</button>
+        </form>
+        <a class="back-link" href="javascript:history.back()">← Back</a>
+    </div>
+
+    <script>
+        async function getMovieList() {
+            try {
+                const response = await fetch(`/get-all-movies`);
+                const data = await response.json();
+                displayMovieList(data);
+            } catch (error) {
+                console.error("Error fetching movies:", error);
+            }
+        }
+
+        function displayMovieList(movies) {
+            const select = document.getElementById("movie-name-select");
+            movies.forEach((movie) => {
+                let option = document.createElement("option");
+                option.setAttribute("value", movie["Movie name"]);
+                option.textContent = movie["Movie name"];
+                select.appendChild(option);
+            });
+        }
+
+        async function getMovies(category) {
+            try {
+                const response = await fetch(`/get-movies?category=${category}`);
+                const data = await response.json();
+                displayMovies(data, category);
+            } catch (error) {
+                console.error("Error fetching movies:", error);
+            }
+        }
+
+        async function getMovieDetails(movieName) {
+            try {
+                const response = await fetch(`/get-movie-details?name=${movieName}`);
+                const data = await response.json();
+                displayMovieDetails1(data, movieName);
+            } catch (error) {
+                console.error("Error fetching movie details:", error);
+            }
+        }
+
+        function displayMovies(movies, category) {
+            const movieCategoryDiv = document.getElementById("movie-category1");
+            movieCategoryDiv.innerHTML = "";
+            if (movies.length === 0) {
+                movieCategoryDiv.textContent = `No movies found for: ${category}`;
+            } else {
+                const ul = document.createElement("ul");
+                movies.forEach((movie) => {
+                    const li = document.createElement("li");
+                    const movieName = movie["Movie name"];
+                    li.textContent = movieName;
+                    li.addEventListener("click", () => { getMovieDetails(movieName); });
+                    ul.appendChild(li);
+                });
+                movieCategoryDiv.appendChild(ul);
+                movieCategoryDiv.style.display = "block";
+            }
+        }
+        function displayMovieDetails1(details, movieName) {
+            const movieDetailsDiv = document.getElementById("movie-details1");
+            movieDetailsDiv.innerHTML = "";
+            if (details) {
+                movieDetailsDiv.innerHTML = `
+          <div><strong>Movie:</strong> ${movieName}</div>
+          <div><strong>Description:</strong> ${details["Description"]}</div>
+          <div><strong>Actors:</strong> ${details["Actors"]}</div>
+        `;
+                movieDetailsDiv.style.display = "block";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", getMovieList());
+    </script>
+</body>
+
+</html>
